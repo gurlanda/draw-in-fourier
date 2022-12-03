@@ -32,7 +32,7 @@ const Circle: React.FC<{
   const Ring = styled.div`
     height: ${magnitude * 2}px;
     width: ${magnitude * 2}px;
-    border-width: ${10}px;
+    border-width: ${ringWidth}px;
     top: ${-(magnitude - planetRadius)}px;
     left: ${-(magnitude - planetRadius)}px;
   `;
