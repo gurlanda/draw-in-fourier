@@ -4,9 +4,9 @@ import styled, { keyframes } from 'styled-components';
 const Circle: React.FC<{
   children?: ReactNode;
   speedMs: number;
-  magnitude: number;
+  magnitudePx: number;
   argumentDeg: number;
-}> = ({ speedMs, magnitude, argumentDeg, children }) => {
+}> = ({ speedMs, magnitudePx, argumentDeg, children }) => {
   // If speedMs is negative, reverse the direction of rotation
   // (Positive rotation <=> speedMs > 0
   //  Negative rotation <=> speedMs < 0)
@@ -20,12 +20,12 @@ const Circle: React.FC<{
   const orbit = keyframes`
   from {
   transform: rotate(${-argumentDeg * direction}deg) translate(${
-    magnitude - ringWidth / 2
+    magnitudePx - ringWidth / 2
   }px) rotate(${argumentDeg * direction}deg);
   }
   to {
   transform: rotate(${-(argumentDeg + 360) * direction}deg) translate(${
-    magnitude - ringWidth / 2
+    magnitudePx - ringWidth / 2
   }px) rotate(${(argumentDeg + 360) * direction}deg);
   }
   `;
@@ -38,11 +38,11 @@ const Circle: React.FC<{
   `;
 
   const Ring = styled.div`
-    height: ${magnitude * 2}px;
-    width: ${magnitude * 2}px;
+    height: ${magnitudePx * 2}px;
+    width: ${magnitudePx * 2}px;
     border-width: ${ringWidth}px;
-    top: ${-(magnitude - planetRadius)}px;
-    left: ${-(magnitude - planetRadius)}px;
+    top: ${-(magnitudePx - planetRadius)}px;
+    left: ${-(magnitudePx - planetRadius)}px;
   `;
 
   return (
