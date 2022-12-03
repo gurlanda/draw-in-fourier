@@ -7,8 +7,16 @@ const Circle: React.FC<{
   magnitude: number;
   argumentDeg: number;
 }> = ({ speedMs, magnitude, argumentDeg, children }) => {
+  // If speedMs is negative, reverse the direction of rotation
+  // (Positive rotation <=> speedMs > 0
+  //  Negative rotation <=> speedMs < 0)
+  let direction = 1;
+  if (speedMs < 0) {
+    direction = -1;
+    speedMs = -speedMs; // After this line, speedMs will represent the magnitude of angular velocity (i.e. it will lose its direction)
+  }
+
   const ringWidth = 8;
-  const direction = -1;
   const orbit = keyframes`
   from {
   transform: rotate(${-argumentDeg * direction}deg) translate(${
