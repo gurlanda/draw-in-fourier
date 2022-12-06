@@ -5,9 +5,21 @@ function App() {
     <div className="bg-gray-800 h-screen p-4">
       <h1 className="text-3xl text-white font-bold underline">Hello world!</h1>
       <div className="flex justify-center items-center h-full">
-        <Circle speedMs={7000} magnitudePx={100} argumentDeg={270}>
-          <Circle speedMs={-2000} magnitudePx={80} argumentDeg={90}>
-            <Circle speedMs={3000} magnitudePx={50} argumentDeg={100}></Circle>
+        <Circle
+          angularVelocityMillisec={7000}
+          radiusPx={100}
+          initialAngleDeg={270}
+        >
+          <Circle
+            angularVelocityMillisec={-2000}
+            radiusPx={80}
+            initialAngleDeg={90}
+          >
+            <Circle
+              angularVelocityMillisec={3000}
+              radiusPx={50}
+              initialAngleDeg={100}
+            ></Circle>
           </Circle>
         </Circle>
       </div>
