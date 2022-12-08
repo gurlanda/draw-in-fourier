@@ -1,4 +1,5 @@
 import FourierRing from './components/FourierRing';
+import DrawingCanvas from './components/DrawingCanvas';
 
 function App() {
   return (
@@ -20,10 +21,29 @@ function App() {
                 angularVelocityMillisec={3000}
                 radiusPx={50}
                 initialAngleDeg={100}
-              ></FourierRing>
+              >
+                <FourierRing
+                  angularVelocityMillisec={1100}
+                  radiusPx={20}
+                  initialAngleDeg={100}
+                >
+                  <FourierRing
+                    angularVelocityMillisec={-900}
+                    radiusPx={75}
+                    initialAngleDeg={20}
+                  >
+                    <FourierRing
+                      angularVelocityMillisec={-800}
+                      radiusPx={50}
+                      initialAngleDeg={100}
+                    ></FourierRing>
+                  </FourierRing>
+                </FourierRing>
+              </FourierRing>
             </FourierRing>
           </FourierRing>
         </div>
+        <DrawingCanvas />
       </div>
     </div>
   );
