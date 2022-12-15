@@ -3,7 +3,7 @@ import DrawingCanvas from './components/DrawingCanvas';
 
 function App() {
   return (
-    <div className="bg-gray-800 h-screen p-4">
+    <div className="bg-gray-800 h-screen p-4 relative">
       <div className="flex justify-center items-center h-full">
         <div className="relative">
           <FourierRing
@@ -32,7 +32,7 @@ function App() {
                     initialAngleDeg={20}
                   >
                     <FourierRing
-                      angularVelocityMillisec={-800}
+                      angularVelocityMillisec={800}
                       radiusPx={50}
                       initialAngleDeg={100}
                     ></FourierRing>
@@ -42,7 +42,7 @@ function App() {
             </FourierRing>
           </FourierRing>
         </div>
-        <DrawingCanvas />
+        <DrawingCanvas></DrawingCanvas>
       </div>
     </div>
   );

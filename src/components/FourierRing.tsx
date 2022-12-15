@@ -69,7 +69,7 @@ const FourierRing: React.FC<{
   `;
 
   return (
-    <Ring className="rounded-full border-blue-600 flex justify-center items-center relative">
+    <Ring className="rounded-full border-blue-600 flex justify-center items-center relative z-10">
       <OrbitingCursor className="rounded-full bg-yellow-500 absolute">
         {children}
       </OrbitingCursor>
