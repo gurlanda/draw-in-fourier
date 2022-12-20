@@ -7,14 +7,14 @@ import Point from '../util/Point';
 const PositionBroadcaster: React.FC<{}> = () => {
   const cursorContext = useContext(CursorContext);
   const divRef = useRef<HTMLDivElement>(null);
-  const animationCallbackId = useRef<number>(0);
+  // const animationCallbackId = useRef<number>(0);
 
   useEffect(() => {
     if (!cursorContext) {
       return;
     }
 
-    // This callback allows other components (in particular, the canvas) to request this Cursor's position in the page
+    // This callback allows other components (in particular, the canvas) to request the broadcaster's position in the page
     const broadcastCursorPosition = (): Point => {
       if (!divRef.current) {
         return new Point();
@@ -28,21 +28,11 @@ const PositionBroadcaster: React.FC<{}> = () => {
         boundingClientRect.x,
         boundingClientRect.y
       );
-      console.dir('Wanted callback');
-      // console.dir(position);
+
       return position;
     };
     cursorContext.setPositionBroadcastCallback(broadcastCursorPosition);
-
-    // const keepRequestingPosition = () => {
-    //   // broadcastCursorPosition();
-    //   cursorContext.setPositionUpdateCallback(broadcastCursorPosition);
-    //   animationCallbackId.current = requestAnimationFrame(
-    //     keepRequestingPosition
-    //   );
-    // };
-
-    // animationCallbackId.current = requestAnimationFrame(keepRequestingPosition);
+    // eslint-disable-next-line
   }, []);
 
   if (!cursorContext) {

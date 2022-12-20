@@ -16,17 +16,12 @@ const CursorContextProvider: React.FC<{ children?: React.ReactNode }> = ({
     }
 
     const newPosition = state.positionBroadcastCallback();
-    console.log('updateCursorPosition()');
     return newPosition;
   };
 
   // Allows the broadcaster to set the callback used to retrieve its position
   const setPositionBroadcastCallback = (callback: { (): Point }) => {
     const newState = state.cloneTransformPositionCallback(callback);
-    console.log('setPositionUpdateCallback()');
-    // newState.flag = 'Changed!';
-    // console.log(newState.flag);
-    // newState.updateCursorPositionCallback();
     setState(newState);
   };
 
