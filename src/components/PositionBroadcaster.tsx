@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef } from 'react';
 import CursorContext from '../context/Cursor/CursorContext';
-import Point from '../context/Cursor/Point';
+import Point from '../util/Point';
 
 // This component will broadcast its position within the viewport
 // In particular, we will use this component to give other components access to the position of a FourierRing's cursor

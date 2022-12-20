@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import CursorContext, { CursorContextState } from './CursorContext';
-import Point from './Point';
+import Point from '../../util/Point';
 
 const CursorContextProvider: React.FC<{ children?: React.ReactNode }> = ({
   children,
@@ -9,23 +9,18 @@ const CursorContextProvider: React.FC<{ children?: React.ReactNode }> = ({
     new CursorContextState()
   );
 
-  // Update the position of the broadcaster
-  const updateCursorPosition = (): Point | null => {
+  // Get the current position of the broadcaster
+  const getCursorPosition = (): Point | null => {
     if (!state.positionBroadcastCallback) {
       return null;
     }
 
     const newPosition = state.positionBroadcastCallback();
-
-    // Update the state without mutating
-    // const newState = state.cloneTransformCursorPosition(newPosition);
-    // setState(newState);
     console.log('updateCursorPosition()');
-    // console.log(state);
     return newPosition;
   };
 
-  // Allows the broadcaster to set the callback used to update its position
+  // Allows the broadcaster to set the callback used to retrieve its position
   const setPositionBroadcastCallback = (callback: { (): Point }) => {
     const newState = state.cloneTransformPositionCallback(callback);
     console.log('setPositionUpdateCallback()');
@@ -36,7 +31,7 @@ const CursorContextProvider: React.FC<{ children?: React.ReactNode }> = ({
   };
 
   const providedMethods = {
-    updateCursorPosition,
+    getCursorPosition,
     setPositionBroadcastCallback,
   };
 

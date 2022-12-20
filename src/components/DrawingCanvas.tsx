@@ -1,15 +1,15 @@
 import React, { useContext, useEffect, useRef } from 'react';
 import CursorContext from '../context/Cursor/CursorContext';
-import Point from '../context/Cursor/Point';
+import Point from '../util/Point';
 
 const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
   children,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const lastPosition = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const canvasPosition = useRef<{ x: number; y: number } | null>(null);
+  const lastMouseCursorPosition = useRef<Point>(new Point());
+  const canvasPosition = useRef<Point | null>(null);
   const callbackId = useRef<number>(0); // Used to cancel the animation during cleanup
-  const lastCursorPosition = useRef<Point>(new Point());
+  const lastOrbitingCursorPosition = useRef<Point>(new Point());
 
   const cursorContext = useContext(CursorContext);
 
@@ -17,8 +17,8 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
   const setLastPosition = (
     e: React.MouseEvent<HTMLCanvasElement, MouseEvent>
   ) => {
-    lastPosition.current.x = e.clientX;
-    lastPosition.current.y = e.clientY;
+    lastMouseCursorPosition.current.x = e.clientX;
+    lastMouseCursorPosition.current.y = e.clientY;
   };
 
   // Save the position of the canvas within the page
@@ -29,19 +29,11 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
 
     // Used to get the position of the canvas on the page
     const boundingRect = canvasRef.current.getBoundingClientRect();
-    canvasPosition.current = {
-      x: boundingRect.x,
-      y: boundingRect.y,
-    };
+    canvasPosition.current = new Point(boundingRect.x, boundingRect.y);
   };
 
   // Draw on the canvas on pointerDown
   const draw: React.MouseEventHandler<HTMLCanvasElement> = (e) => {
-    // console.dir({
-    //   'canvas.clientHeight': canvasRef.current!.clientHeight,
-    //   'canvas.clientWidth': canvasRef.current!.clientWidth,
-    // });
-
     // Only allow the left mouse button
     if (e.buttons !== 1) {
       return;
@@ -64,8 +56,8 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
 
     // Set starting point of stroke
     canvasContext.moveTo(
-      lastPosition.current.x - canvasPosition.current!.x,
-      lastPosition.current.y - canvasPosition.current!.y
+      lastMouseCursorPosition.current.x - canvasPosition.current!.x,
+      lastMouseCursorPosition.current.y - canvasPosition.current!.y
     );
 
     // Save the current position
@@ -99,8 +91,8 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
 
     // Initialize canvas positioning and size
     initializeCanvasPosition();
-    const canvasWidth = (canvasRef.current.width = window.innerWidth);
-    const canvasHeight = (canvasRef.current.height = window.innerHeight);
+    canvasRef.current.width = window.innerWidth;
+    canvasRef.current.height = window.innerHeight;
 
     // Resize the canvas on any resizing event
     const observer = new ResizeObserver(() => {
@@ -113,33 +105,11 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
     });
     observer.observe(canvasRef.current);
 
-    // An ImageData object allows us to modify the pixel data of the canvas
-    // const imageData = context.createImageData(canvasWidth, canvasHeight);
-
-    // Loop over all the pixels and draw them cyan
-    // for (let x = 0; x < canvasWidth; x++) {
-    //   for (let y = 0; y < canvasHeight; y++) {
-    //     const pixelIndex = (y * canvasWidth + x) * 4;
-
-    //     // Set the color of the pixel to be cyan
-    //     imageData.data[pixelIndex] = 0; // Red component
-    //     imageData.data[pixelIndex + 1] = 225; // Green component
-    //     imageData.data[pixelIndex + 2] = 225; // Blue component
-    //     imageData.data[pixelIndex + 3] = 255; // Alpha component
-    //   }
-    // }
-    // context.putImageData(imageData, 0, 0); // Apply calculated imageData
-
     // Trace the cursor's path
     const traceCursorPath = () => {
       const canvasContext = canvasRef.current?.getContext('2d');
       if (!canvasContext || !cursorContext) {
         // Try again next frame
-        // if (cursorContext!.state.flag === 'Not updated') {
-        //   console.log('Not updated');
-        // } else {
-        //   console.log('Waiting...');
-        // }
 
         callbackId.current = requestAnimationFrame(traceCursorPath);
         return;
@@ -157,21 +127,21 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
 
       // Set starting point of stroke to the last cursor position
       canvasContext.moveTo(
-        lastCursorPosition.current.x - canvasPosition.current!.x,
-        lastCursorPosition.current.y - canvasPosition.current!.y
+        lastOrbitingCursorPosition.current.x - canvasPosition.current!.x,
+        lastOrbitingCursorPosition.current.y - canvasPosition.current!.y
       );
 
-      console.dir({
-        'Old position:': lastCursorPosition.current,
-      });
-      lastCursorPosition.current =
-        cursorContext.updateCursorPosition() ?? new Point();
-      console.dir({ 'New position:': lastCursorPosition.current });
+      // console.dir({
+      //   'Old position:': lastCursorPosition.current,
+      // });
+      lastOrbitingCursorPosition.current =
+        cursorContext.getCursorPosition() ?? new Point();
+      // console.dir({ 'New position:': lastCursorPosition.current });
 
       // Set the end point of the stroke to the current cursor position
       canvasContext.lineTo(
-        lastCursorPosition.current.x - canvasPosition.current!.x,
-        lastCursorPosition.current.y - canvasPosition.current!.y
+        lastOrbitingCursorPosition.current.x - canvasPosition.current!.x,
+        lastOrbitingCursorPosition.current.y - canvasPosition.current!.y
       );
 
       // Draw the stroke
