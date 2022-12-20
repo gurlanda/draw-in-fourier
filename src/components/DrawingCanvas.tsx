@@ -9,6 +9,7 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
   const lastPosition = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const canvasPosition = useRef<{ x: number; y: number } | null>(null);
   const callbackId = useRef<number>(0); // Used to cancel the animation during cleanup
+  const lastCursorPosition = useRef<Point>(new Point());
 
   const cursorContext = useContext(CursorContext);
 
@@ -152,25 +153,25 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
       canvasContext.beginPath();
       canvasContext.lineWidth = 2;
       canvasContext.lineCap = 'round';
-      canvasContext.strokeStyle = '#00e100'; // Cyan
+      canvasContext.strokeStyle = '#00e1e1'; // Cyan
 
       // Set starting point of stroke to the last cursor position
       canvasContext.moveTo(
-        cursorContext.state.cursorPosition.x - canvasPosition.current!.x,
-        cursorContext.state.cursorPosition.y - canvasPosition.current!.y
+        lastCursorPosition.current.x - canvasPosition.current!.x,
+        lastCursorPosition.current.y - canvasPosition.current!.y
       );
 
       console.dir({
-        'Old position:': cursorContext.state.cursorPosition,
+        'Old position:': lastCursorPosition.current,
       });
-      const currentPosition =
+      lastCursorPosition.current =
         cursorContext.updateCursorPosition() ?? new Point();
-      console.dir({ 'New position:': currentPosition });
+      console.dir({ 'New position:': lastCursorPosition.current });
 
       // Set the end point of the stroke to the current cursor position
       canvasContext.lineTo(
-        currentPosition.x - canvasPosition.current!.x,
-        currentPosition.y - canvasPosition.current!.y
+        lastCursorPosition.current.x - canvasPosition.current!.x,
+        lastCursorPosition.current.y - canvasPosition.current!.y
       );
 
       // Draw the stroke
@@ -266,4 +267,4 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
   );
 };
 
-export default DrawingCanvas;
+export default React.memo(DrawingCanvas);

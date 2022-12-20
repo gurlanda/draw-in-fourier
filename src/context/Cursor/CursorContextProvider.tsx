@@ -18,8 +18,8 @@ const CursorContextProvider: React.FC<{ children?: React.ReactNode }> = ({
     const newPosition = state.positionBroadcastCallback();
 
     // Update the state without mutating
-    const newState = state.cloneTransformCursorPosition(newPosition);
-    setState(newState);
+    // const newState = state.cloneTransformCursorPosition(newPosition);
+    // setState(newState);
     console.log('updateCursorPosition()');
     // console.log(state);
     return newPosition;
