@@ -1,4 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useContext, useEffect, useRef } from 'react';
+import CursorContext from '../context/Cursor/CursorContext';
+import Point from '../context/Cursor/Point';
 
 const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
   children,
@@ -6,7 +8,9 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const lastPosition = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const canvasPosition = useRef<{ x: number; y: number } | null>(null);
-  // const callbackId = useRef<number>(0); // Used to cancel the animation during cleanup
+  const callbackId = useRef<number>(0); // Used to cancel the animation during cleanup
+
+  const cursorContext = useContext(CursorContext);
 
   // Set the last cursor position using a mouse event
   const setLastPosition = (
@@ -30,6 +34,58 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
     };
   };
 
+  // Draw on the canvas on pointerDown
+  const draw: React.MouseEventHandler<HTMLCanvasElement> = (e) => {
+    // console.dir({
+    //   'canvas.clientHeight': canvasRef.current!.clientHeight,
+    //   'canvas.clientWidth': canvasRef.current!.clientWidth,
+    // });
+
+    // Only allow the left mouse button
+    if (e.buttons !== 1) {
+      return;
+    }
+
+    const canvasContext = canvasRef.current?.getContext('2d');
+    if (!canvasContext) {
+      return;
+    }
+
+    if (!canvasPosition.current) {
+      initializeCanvasPosition();
+    }
+
+    // Begin drawing
+    canvasContext.beginPath();
+    canvasContext.lineWidth = 2;
+    canvasContext.lineCap = 'round';
+    canvasContext.strokeStyle = '#00e1e1'; // Cyan
+
+    // Set starting point of stroke
+    canvasContext.moveTo(
+      lastPosition.current.x - canvasPosition.current!.x,
+      lastPosition.current.y - canvasPosition.current!.y
+    );
+
+    // Save the current position
+    setLastPosition(e);
+
+    // Set the end point of the stroke
+    canvasContext.lineTo(
+      e.clientX - canvasPosition.current!.x,
+      e.clientY - canvasPosition.current!.y
+    );
+
+    // Draw the stroke
+    canvasContext.stroke();
+  };
+
+  // Set the position of the cursor
+  const setPosition: React.MouseEventHandler<HTMLCanvasElement> = (e) => {
+    setLastPosition(e);
+    // console.log(lastPosition.current);
+  };
+
   useEffect(() => {
     if (!canvasRef.current) {
       return;
@@ -46,7 +102,7 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
     const canvasHeight = (canvasRef.current.height = window.innerHeight);
 
     // Resize the canvas on any resizing event
-    const observer = new ResizeObserver((entries) => {
+    const observer = new ResizeObserver(() => {
       if (!canvasRef.current) {
         return;
       }
@@ -57,28 +113,82 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
     observer.observe(canvasRef.current);
 
     // An ImageData object allows us to modify the pixel data of the canvas
-    const imageData = context.createImageData(canvasWidth, canvasHeight);
+    // const imageData = context.createImageData(canvasWidth, canvasHeight);
 
     // Loop over all the pixels and draw them cyan
-    for (let x = 0; x < canvasWidth; x++) {
-      for (let y = 0; y < canvasHeight; y++) {
-        const pixelIndex = (y * canvasWidth + x) * 4;
+    // for (let x = 0; x < canvasWidth; x++) {
+    //   for (let y = 0; y < canvasHeight; y++) {
+    //     const pixelIndex = (y * canvasWidth + x) * 4;
 
-        // Set the color of the pixel to be cyan
-        imageData.data[pixelIndex] = 0; // Red component
-        imageData.data[pixelIndex + 1] = 225; // Green component
-        imageData.data[pixelIndex + 2] = 225; // Blue component
-        imageData.data[pixelIndex + 3] = 255; // Alpha component
+    //     // Set the color of the pixel to be cyan
+    //     imageData.data[pixelIndex] = 0; // Red component
+    //     imageData.data[pixelIndex + 1] = 225; // Green component
+    //     imageData.data[pixelIndex + 2] = 225; // Blue component
+    //     imageData.data[pixelIndex + 3] = 255; // Alpha component
+    //   }
+    // }
+    // context.putImageData(imageData, 0, 0); // Apply calculated imageData
+
+    // Trace the cursor's path
+    const traceCursorPath = () => {
+      const canvasContext = canvasRef.current?.getContext('2d');
+      if (!canvasContext || !cursorContext) {
+        // Try again next frame
+        // if (cursorContext!.state.flag === 'Not updated') {
+        //   console.log('Not updated');
+        // } else {
+        //   console.log('Waiting...');
+        // }
+
+        callbackId.current = requestAnimationFrame(traceCursorPath);
+        return;
       }
-    }
 
-    context.putImageData(imageData, 0, 0);
+      if (!canvasPosition.current) {
+        initializeCanvasPosition();
+      }
 
-    // Disconnect the ResizeObserver on cleanup
-    return () => {
-      observer.disconnect();
+      // Begin drawing
+      canvasContext.beginPath();
+      canvasContext.lineWidth = 2;
+      canvasContext.lineCap = 'round';
+      canvasContext.strokeStyle = '#00e100'; // Cyan
+
+      // Set starting point of stroke to the last cursor position
+      canvasContext.moveTo(
+        cursorContext.state.cursorPosition.x - canvasPosition.current!.x,
+        cursorContext.state.cursorPosition.y - canvasPosition.current!.y
+      );
+
+      console.dir({
+        'Old position:': cursorContext.state.cursorPosition,
+      });
+      const currentPosition =
+        cursorContext.updateCursorPosition() ?? new Point();
+      console.dir({ 'New position:': currentPosition });
+
+      // Set the end point of the stroke to the current cursor position
+      canvasContext.lineTo(
+        currentPosition.x - canvasPosition.current!.x,
+        currentPosition.y - canvasPosition.current!.y
+      );
+
+      // Draw the stroke
+      canvasContext.stroke();
+
+      callbackId.current = requestAnimationFrame(traceCursorPath);
     };
-  }, []);
+    callbackId.current = requestAnimationFrame(traceCursorPath);
+
+    // Cleanup
+    return () => {
+      // Disconnect the ResizeObserver on cleanup
+      observer.disconnect();
+
+      // Cancel the animation
+      cancelAnimationFrame(callbackId.current);
+    };
+  }, [cursorContext]);
 
   /* Animation demo */
   // useEffect(() => {
@@ -143,54 +253,6 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
   //   // Cancel the animation during cleanup
   //   return () => cancelAnimationFrame(callbackId.current);
   // }, []);
-
-  // Draw on the canvas using the pointer
-
-  const draw: React.MouseEventHandler<HTMLCanvasElement> = (e) => {
-    // Only allow the left mouse button
-    if (e.buttons !== 1) {
-      return;
-    }
-
-    const canvasContext = canvasRef.current?.getContext('2d');
-    if (!canvasContext) {
-      return;
-    }
-
-    if (!canvasPosition.current) {
-      initializeCanvasPosition();
-    }
-
-    // Begin drawing
-    canvasContext.beginPath();
-    canvasContext.lineWidth = 2;
-    canvasContext.lineCap = 'round';
-    canvasContext.strokeStyle = '#c0392b';
-
-    // Set starting point of stroke
-    canvasContext.moveTo(
-      lastPosition.current.x - canvasPosition.current!.x,
-      lastPosition.current.y - canvasPosition.current!.y
-    );
-
-    // Save the current position
-    setLastPosition(e);
-
-    // Set the end point of the stroke
-    canvasContext.lineTo(
-      e.clientX - canvasPosition.current!.x,
-      e.clientY - canvasPosition.current!.y
-    );
-
-    // Draw the stroke
-    canvasContext.stroke();
-  };
-
-  // Set the position of the cursor
-  const setPosition: React.MouseEventHandler<HTMLCanvasElement> = (e) => {
-    console.log(lastPosition.current);
-    setLastPosition(e);
-  };
 
   return (
     <canvas
