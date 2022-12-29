@@ -6,7 +6,7 @@
  * @param initialAngleDeg - The starting angle in degrees, measured from the horizontal axis (x-axis)
  */
 class RingParams {
-  angularVelocityMillisec: number; //
+  angularVelocityMillisec: number;
   radiusPx: number;
   initialAngleDeg: number;
 

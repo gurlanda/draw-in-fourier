@@ -7,7 +7,6 @@ function App() {
   const ringParams: RingParams[] = [
     new RingParams(5000, 200, 270),
     new RingParams(-1300, 100, 90),
-    new RingParams(4000, 50, 0),
   ];
 
   return (
