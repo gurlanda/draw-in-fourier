@@ -1,4 +1,4 @@
-import { complex as Complex } from 'ts-complex-numbers';
+import Complex from './Complex';
 
 /**
  * Performs the complex-valued FFT. The size of the output signal will be the smallest power of two that is greater than max(signal.length, minOutputSize).
