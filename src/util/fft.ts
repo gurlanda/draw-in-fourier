@@ -9,3 +9,5 @@ import { complex as Complex } from 'ts-complex-numbers';
 const fft = (signal: Complex[], minOutputSize: number = 0): Complex[] => {
   return [];
 };
+
+export default fft;
