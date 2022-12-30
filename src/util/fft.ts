@@ -15,7 +15,8 @@ import InvalidArgumentError from './InvalidArgumentError';
  * @throws {InvalidArgumentError} When the input signal is not a positive integer power of two
  */
 function fft(signal: Complex[]): Complex[] {
-  return [];
+  // Make all tests fail initially
+  return [new Complex(1, 1), new Complex(2, 2)];
 }
 
 /**
