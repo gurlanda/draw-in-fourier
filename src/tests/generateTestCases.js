@@ -1,9 +1,9 @@
 // A utility that generates test cases
-const signalLength = 10;
+const signalLength = 128;
 console.log('[');
 
 function randomNumber() {
-  return Math.floor(Math.random() * 11);
+  return Math.random() * 10000;
 }
 
 for (let i = 0; i < signalLength - 1; i++) {

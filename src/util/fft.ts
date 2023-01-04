@@ -15,8 +15,52 @@ import InvalidArgumentError from './InvalidArgumentError';
  * @throws {InvalidArgumentError} When the input signal is not a positive integer power of two
  */
 function fft(signal: Complex[]): Complex[] {
-  // Make all tests fail initially
-  return [new Complex(1, 1), new Complex(2, 2)];
+  if (signal.length <= 1) {
+    return signal;
+  }
+
+  if (!isPositivePowerOfTwo(signal.length)) {
+    throw new InvalidArgumentError(
+      'In fft(): Given signal has length that is not a (positive integer) power of two'
+    );
+  }
+
+  const principleRoot = principleRootOfUnity(signal.length);
+
+  // Extract the even-indexed and odd-indexed elements into their own signals
+  const evenSignal: Complex[] = [];
+  const oddSignal: Complex[] = [];
+  for (let i = 0; i < signal.length; i++) {
+    if (i % 2 === 0) {
+      evenSignal.push(cloneComplex(signal[i]));
+    } else {
+      oddSignal.push(cloneComplex(signal[i]));
+    }
+  }
+
+  const evenSignalFFT = fft(evenSignal);
+  const oddSignalFFT = fft(oddSignal);
+
+  const output: Complex[] = [];
+  for (let i = 0; i < signal.length / 2; i++) {
+    // Perform the following calculation, then push the result:
+    // evenSignalFFT(i) + (principleRoot * oddSignalFFT(i))
+    const product = principleRoot.mult(oddSignalFFT[i]);
+    output.push(evenSignalFFT[i].add(product));
+  }
+
+  for (let i = 0; i < signal.length / 2; i++) {
+    // Perform the following calculation, then push the result:
+    // evenSignalFFT(i) - (principleRoot * oddSignalFFT(i))
+    const product = principleRoot.mult(oddSignalFFT[i]);
+    output.push(evenSignalFFT[i].sub(product));
+  }
+
+  return output;
+}
+
+function cloneComplex(num: Complex): Complex {
+  return new Complex(num.real, num.img);
 }
 
 /**
@@ -33,6 +77,30 @@ function isPositivePowerOfTwo(num: number): boolean {
   } else {
     return isPositivePowerOfTwo(num / 2);
   }
+}
+
+/**
+ * Calculates the principle Nth root of unity for a given positive integer n.
+ * @param n The degree of the root of unity to calculate.
+ * @returns The principle Nth root of unity.
+ * @throws {InvalidArgumentError} If the given argument is not a positive integer.
+ */
+function principleRootOfUnity(n: number): Complex {
+  if (n <= 0) {
+    throw new InvalidArgumentError('Given argument is not a positive integer');
+  }
+
+  if (n - Math.floor(n) !== 0) {
+    throw new InvalidArgumentError('Given argument is not a positive integer');
+  }
+
+  const i = new Complex(0, 1);
+  const pi = new Complex(Math.PI, 0);
+
+  // Perform the following complex exponential:
+  // e^( (2 * PI * i) / n )
+  const arg = pi.mult(i.mult(new Complex(2.0 / n, 0)));
+  return arg.exp();
 }
 
 export default fft;

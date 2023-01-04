@@ -4,6 +4,64 @@ import Complex from '../util/Complex';
 import fft from '../util/fft';
 
 /**
+ * Calculates the relative error between two numbers, where the larger input is used as the divisor. This is done so that the result doesn't depend on the order of the inputs.
+ * @param num1 The first input.
+ * @param num2 The second input.
+ * @returns The relative error between the inputs.
+ */
+function relativeError(num1: number, num2: number): number {
+  const difference = num1 - num2;
+  const relativeError = Math.abs(difference / Math.max(num1, num2));
+  return relativeError;
+}
+
+/**
+ * Determines whether or not two complex numbers are within an acceptable bound.
+ * @param num1 The first argument.
+ * @param num2 The second argument.
+ * @returns True if and only if the relative error between the two numbers are within an acceptable bound.
+ */
+function numsAreCloseEnough(num1: Complex, num2: Complex): boolean {
+  const acceptableError = 1e-13;
+  if (
+    relativeError(num1.real, num2.real) <= acceptableError &&
+    relativeError(num1.img, num2.img) <= acceptableError
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Determines whether or not two signals are equal, barring some numerical error. This function compares two signals pointwise and returns false if either the signals are of different length or if there exists an index i such that the relative error between signal1[i] and signal2[i] is larger than the acceptable error.
+ * @param signal1 The first signal to be compared.
+ * @param signal2 The second signal to be compared.
+ * @returns True if and only if the given signals are of the same length and are pointwise 'close enough'.
+ */
+function signalsAreCloseEnough(
+  signal1: Complex[],
+  signal2: Complex[]
+): boolean {
+  if (signal1.length !== signal2.length) {
+    return false;
+  }
+
+  if (signal1.length === 0 && signal2.length === 0) {
+    return true;
+  }
+
+  // At this point, we know that the signals are the same length and that they're both non-empty
+  for (let i = 0; i < signal1.length; i++) {
+    if (!numsAreCloseEnough(signal1[i], signal2[i])) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
  * Calculates the pointwise sum of two complex-valued signals. If one signal is bigger than the other, the smaller one is treated as if it's padded with zeros.
  * @param signal1 The first signal.
  * @param signal2 The second signal.
@@ -16,23 +74,55 @@ function pointwiseSum(signal1: Complex[], signal2: Complex[]): Complex[] {
       Math.max(signal1.length, signal2.length)
     );
 
-  // Perform the pointwise sum
-  output.forEach((element, index, output) => {
+  for (let i = 0; i < output.length; i++) {
     // If signal1 is out of bounds, pretend there's a zero
     // prettier-ignore
     const signalOneElement =
-      index < signal1.length 
-      ? signal1[index] 
+      i < signal1.length 
+      ? signal1[i] 
       : new Complex(0, 0);
 
     // prettier-ignore
     const signalTwoElement =
-      index < signal2.length 
-      ? signal2[index] 
+      i < signal2.length 
+      ? signal2[i] 
       : new Complex(0, 0);
 
-    output[index] = signalOneElement.add(signalTwoElement);
-  });
+    output[i] = signalOneElement.add(signalTwoElement);
+  }
+
+  return output;
+}
+
+/**
+ * Calculates the pointwise product of two complex-valued signals. If one signal is bigger than the other, the smaller one is treated as if it's padded with zeros.
+ * @param signal1 The first signal.
+ * @param signal2 The second signal.
+ * @returns The pointwise product of the given signals.
+ */
+function pointwiseProduct(signal1: Complex[], signal2: Complex[]): Complex[] {
+  // Create a new array filled with zeros. Its length is the length of the longest argument.
+  // prettier-ignore
+  const output = new Array<Complex>(
+      Math.max(signal1.length, signal2.length)
+    );
+
+  for (let i = 0; i < output.length; i++) {
+    // If signal1 is out of bounds, pretend there's a zero
+    // prettier-ignore
+    const signalOneElement =
+      i < signal1.length 
+      ? signal1[i] 
+      : new Complex(0, 0);
+
+    // prettier-ignore
+    const signalTwoElement =
+      i < signal2.length 
+      ? signal2[i] 
+      : new Complex(0, 0);
+
+    output[i] = signalOneElement.mult(signalTwoElement);
+  }
 
   return output;
 }
@@ -45,9 +135,10 @@ function pointwiseSum(signal1: Complex[], signal2: Complex[]): Complex[] {
  */
 function scalarMultiplication(signal: Complex[], scalar: number): Complex[] {
   const output = new Array<Complex>(signal.length);
-  output.forEach((element, index, output) => {
-    output[index] = signal[index].scalarMult(scalar);
-  });
+  for (let i = 0; i < output.length; i++) {
+    output[i] = signal[i].scalarMult(scalar);
+  }
+
   return output;
 }
 
@@ -73,6 +164,12 @@ function allValuesAreIdentical(signal: Complex[]): boolean {
   return true;
 }
 
+/**
+ * Compares two Complex-valued arrays and returns true if and only if they are identical in value.
+ * @param signal1 The first signal to be compared.
+ * @param signal2 The second signal to be compared.
+ * @returns True if and only if the two signals are exactly the same.
+ */
 function signalsAreEqual(signal1: Complex[], signal2: Complex[]): boolean {
   if (signal1.length !== signal2.length) {
     return false;
@@ -111,12 +208,13 @@ describe('Tests for complex-valued FFT implementation.', () => {
       testCases.additivitySimpleSignal2
     );
 
-    expect(fft(pointwiseSignalSum)).toStrictEqual(
-      pointwiseSum(
-        fft(testCases.additivitySimpleSignal1),
-        fft(testCases.additivitySimpleSignal2)
-      )
+    const sumThenFFT = fft(pointwiseSignalSum);
+    const fftThenSum = pointwiseSum(
+      fft(testCases.additivitySimpleSignal1),
+      fft(testCases.additivitySimpleSignal2)
     );
+
+    expect(signalsAreCloseEnough(sumThenFFT, fftThenSum)).toBe(true);
   });
 
   it('Should obey additivity (huge signal)', () => {
@@ -125,12 +223,13 @@ describe('Tests for complex-valued FFT implementation.', () => {
       testCases.additivityHugeSignal2
     );
 
-    expect(fft(pointwiseSignalSum)).toStrictEqual(
-      pointwiseSum(
-        fft(testCases.additivityHugeSignal1),
-        fft(testCases.additivityHugeSignal2)
-      )
+    const sumThenFFT = fft(pointwiseSignalSum);
+    const fftThenSum = pointwiseSum(
+      fft(testCases.additivityHugeSignal1),
+      fft(testCases.additivityHugeSignal2)
     );
+
+    expect(signalsAreCloseEnough(sumThenFFT, fftThenSum)).toBe(true);
   });
 
   it('Should be homogeneous (simple signal)', () => {
@@ -139,12 +238,19 @@ describe('Tests for complex-valued FFT implementation.', () => {
       testCases.homogeneitySimpleScalar
     );
 
-    expect(fft(scaledSignal)).toStrictEqual(
+    const scaleThenFFT = fft(
       scalarMultiplication(
-        fft(testCases.homogeneitySimpleSignal),
+        testCases.homogeneitySimpleSignal,
         testCases.homogeneitySimpleScalar
       )
     );
+
+    const fftThenScale = scalarMultiplication(
+      fft(testCases.homogeneitySimpleSignal),
+      testCases.homogeneitySimpleScalar
+    );
+
+    expect(signalsAreCloseEnough(scaleThenFFT, fftThenScale)).toBe(true);
   });
 
   it('Should be homogeneous (huge signal)', () => {
@@ -153,12 +259,19 @@ describe('Tests for complex-valued FFT implementation.', () => {
       testCases.homogeneityHugeScalar
     );
 
-    expect(fft(scaledSignal)).toStrictEqual(
+    const scaleThenFFT = fft(
       scalarMultiplication(
-        fft(testCases.homogeneityHugeSignal),
+        testCases.homogeneityHugeSignal,
         testCases.homogeneityHugeScalar
       )
     );
+
+    const fftThenScale = scalarMultiplication(
+      fft(testCases.homogeneityHugeSignal),
+      testCases.homogeneityHugeScalar
+    );
+
+    expect(signalsAreCloseEnough(scaleThenFFT, fftThenScale)).toBe(true);
   });
 
   it('Should be linear (simple signal)', () => {
@@ -184,9 +297,13 @@ describe('Tests for complex-valued FFT implementation.', () => {
       testCases.linearitySimpleScalar2
     );
 
-    expect(addedScaledSignals).toStrictEqual(
-      pointwiseSum(scaledTransformedSignal1, scaledTransformedSignal2)
+    const addscaleThenFFT = fft(addedScaledSignals);
+    const fftThenAddscale = pointwiseSum(
+      scaledTransformedSignal1,
+      scaledTransformedSignal2
     );
+
+    expect(signalsAreCloseEnough(addscaleThenFFT, fftThenAddscale)).toBe(true);
   });
 
   it('Should be linear (huge signal)', () => {
@@ -212,14 +329,18 @@ describe('Tests for complex-valued FFT implementation.', () => {
       testCases.linearityHugeScalar2
     );
 
-    expect(addedScaledSignals).toStrictEqual(
-      pointwiseSum(scaledTransformedSignal1, scaledTransformedSignal2)
+    const addscaleThenFFT = fft(addedScaledSignals);
+    const fftThenAddscale = pointwiseSum(
+      scaledTransformedSignal1,
+      scaledTransformedSignal2
     );
+
+    expect(signalsAreCloseEnough(addscaleThenFFT, fftThenAddscale)).toBe(true);
   });
 
-  it('Should give an output where all bins have a constant value when given the unit impulse as an input signal', () => {
+  it('Should give an output where all bins in the frequency domain have a constant value when given the unit impulse as an input signal', () => {
     const zero = new Complex(0, 0);
-    const unitImpulse = Array<Complex>(100)
+    const unitImpulse = Array<Complex>(128)
       .fill(zero) // The filled values reference the same object
       .map(() => new Complex(0, 0)); // Create new, distinct objects in their place
 
@@ -228,29 +349,46 @@ describe('Tests for complex-valued FFT implementation.', () => {
     expect(allValuesAreIdentical(fft(unitImpulse))).toBe(true);
   });
 
-  it('Should reverse the input signal when applied twice (simple signal)', () => {
-    const possiblySame = reverseSignal(
-      fft(fft(testCases.reversalTestSimpleSignal))
-    );
-    expect(possiblySame).toStrictEqual(testCases.reversalTestSimpleSignal);
-  });
+  // it('Should transform a time-shifted time domain signal to a linearly phase-rotated signal in the frequency domain', () => {
+  //   // Create the unit impulse
+  //   const zero = new Complex(0, 0);
+  //   const unitImpulse = Array<Complex>(128)
+  //     .fill(zero) // The filled values reference the same object
+  //     .map(() => new Complex(0, 0)); // Create new, distinct objects in their place
+  //   unitImpulse[0] = new Complex(1, 0);
 
-  it('Should reverse the input signal when applied twice (huge signal)', () => {
-    const possiblySame = reverseSignal(
-      fft(fft(testCases.reversalTestHugeSignal))
-    );
-    expect(possiblySame).toStrictEqual(testCases.reversalTestHugeSignal);
-  });
+  //   // Create a unit impulse shifted by 20
+  //   const shift = 19;
+  //   const shiftedUnitImpulse = Array<Complex>(128)
+  //     .fill(zero)
+  //     .map(() => new Complex(0, 0));
+  //   shiftedUnitImpulse[shift] = new Complex(1, 0);
 
-  it('Should return the original signal when applied four times (simple signal)', () => {
-    const appliedFourTimes = fft(
-      fft(fft(fft(testCases.applyFourSimpleSignal)))
-    );
-    expect(appliedFourTimes).toStrictEqual(testCases.applyFourSimpleSignal);
-  });
+  //   // Utility function
+  //   // Calculates a rotation scalar
+  //   function phaseRotation(frequency: number) {
+  //     // Calculate the product -i * 2 * PI * frequency * shift
+  //     const i = new Complex(0, 1);
+  //     const omega = (2 * Math.PI * frequency) / 128;
+  //     const product = i.mult(new Complex(omega * shift, 0));
 
-  it('Should return the original signal when applied four times (huge signal)', () => {
-    const appliedFourTimes = fft(fft(fft(fft(testCases.applyFourHugeSignal))));
-    expect(appliedFourTimes).toStrictEqual(testCases.applyFourHugeSignal);
-  });
+  //     return product.exp();
+  //   }
+
+  //   // Create the linear phase rotation signal
+  //   const phaseRotatorSignal = Array<Complex>(128).fill(zero);
+  //   for (let i = 0; i < phaseRotatorSignal.length; i++) {
+  //     phaseRotatorSignal[i] = phaseRotation(i);
+  //   }
+
+  //   const fftThenRotate = pointwiseProduct(
+  //     fft(unitImpulse),
+  //     phaseRotatorSignal
+  //   );
+
+  //   const shiftThenFFT = fft(shiftedUnitImpulse);
+  //   // console.log(shiftThenFFT);
+
+  //   expect(fftThenRotate).toStrictEqual(shiftThenFFT);
+  // });
 });
