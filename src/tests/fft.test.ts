@@ -1,7 +1,7 @@
 import { describe } from '@jest/globals';
 import * as testCases from './testCases';
-import Complex from '../util/Complex';
-import fft from '../util/fft';
+import Complex, { cloneSignal } from '../util/Complex';
+import fft, { pureFFT } from '../util/fft';
 
 /**
  * Calculates the relative error between two numbers, where the larger input is used as the divisor. This is done so that the result doesn't depend on the order of the inputs.
@@ -347,6 +347,31 @@ describe('Tests for complex-valued FFT implementation.', () => {
     unitImpulse[0] = new Complex(1, 0);
 
     expect(allValuesAreIdentical(fft(unitImpulse))).toBe(true);
+  });
+
+  it('Should throw an error if the given input is not a power of two (simple signal)', () => {
+    const notPowerOfTwo = [
+      new Complex(0, 0),
+      new Complex(1, 2),
+      new Complex(69, 200),
+    ];
+
+    function passBadInput() {
+      pureFFT(notPowerOfTwo);
+    }
+
+    expect(passBadInput).toThrowError();
+  });
+
+  it('Should throw an error if the given input is not a power of two (huge signal)', () => {
+    const notPowerOfTwo = cloneSignal(testCases.additivityHugeSignal1);
+    notPowerOfTwo.pop();
+
+    function passBadInput() {
+      pureFFT(notPowerOfTwo);
+    }
+
+    expect(passBadInput).toThrowError();
   });
 
   // it('Should transform a time-shifted time domain signal to a linearly phase-rotated signal in the frequency domain', () => {
