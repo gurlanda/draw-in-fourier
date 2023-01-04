@@ -1,5 +1,5 @@
 import { describe } from '@jest/globals';
-import * as testCases from './testCases';
+import * as testCases from './fftTestCases';
 import Complex, { cloneSignal } from '../util/Complex';
 import fft, { pureFFT } from '../util/fft';
 
