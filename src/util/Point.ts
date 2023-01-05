@@ -87,10 +87,10 @@ function findCenter(points: Point[]): Point {
  * @returns A deep copy of the given points with their new coordinates.
  */
 function changeOfOrigin(points: Point[], newOrigin: Point): Point[] {
-  const normalizedPoints = points.map(
+  const pointsWithChangedOrigin = points.map(
     (point) => new Point(point.x - newOrigin.x, point.y - newOrigin.y)
   );
-  return normalizedPoints;
+  return pointsWithChangedOrigin;
 }
 
 /**
