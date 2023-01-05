@@ -4,9 +4,9 @@ import InvalidArgumentError from './InvalidArgumentError';
  * Represents the set of initial values that defines the motion of a FourierRing.
  */
 class RingParams {
-  angularVelocityMillisec: number;
-  radiusPx: number;
-  initialAngleDeg: number;
+  private _angularVelocityMillisec: number;
+  private _radiusPx: number;
+  private _initialAngleDeg: number;
 
   /**
    * Construct a new RingParams object.
@@ -20,8 +20,8 @@ class RingParams {
     radiusPx: number,
     initialAngleDeg: number
   ) {
-    this.angularVelocityMillisec = angularVelocityMillisec;
-    this.initialAngleDeg = initialAngleDeg;
+    this._angularVelocityMillisec = angularVelocityMillisec;
+    this._initialAngleDeg = initialAngleDeg;
 
     if (radiusPx < 0) {
       throw new InvalidArgumentError(
@@ -29,7 +29,19 @@ class RingParams {
       );
     }
 
-    this.radiusPx = radiusPx;
+    this._radiusPx = radiusPx;
+  }
+
+  get angularVelocityMillisec(): number {
+    return this._angularVelocityMillisec;
+  }
+
+  get radiusPx(): number {
+    return this._radiusPx;
+  }
+
+  get initialAngleDeg(): number {
+    return this._initialAngleDeg;
   }
 
   /**
