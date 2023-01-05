@@ -5,26 +5,26 @@ import styled, { keyframes } from 'styled-components';
  * A cursor moving along a ring. The cursor can have children that will move along with the cursor.
  *
  * @param children - The children of this component, which will rotate with the circle.
- * @param angularVelocityMillisec - The velocity of rotation in milliseconds. Positive values specify counterclockwise rotation and negative values specify clockwise rotation.
+ * @param angularPeriodMillisec - The period of rotation in milliseconds. Positive values specify counterclockwise rotation and negative values specify clockwise rotation.
  * @param radiusPx - The radius of the circle in pixels
  * @param initialAngleDeg - The starting angle in degrees, measured from the horizontal axis (x-axis)
  */
 const FourierRing: React.FC<{
   children?: ReactNode;
-  angularVelocityMillisec: number;
+  angularPeriodMillisec: number;
   radiusPx: number;
   initialAngleDeg: number;
-}> = ({ angularVelocityMillisec, radiusPx, initialAngleDeg, children }) => {
+}> = ({ angularPeriodMillisec, radiusPx, initialAngleDeg, children }) => {
   const ringWidthPx = 2;
   const cursorRadiusPx = 5;
   let rotationDirection: number;
-  let angularSpeedMillisec: number;
-  if (angularVelocityMillisec >= 0) {
+  let unsignedAngularSpeedMillisec: number;
+  if (angularPeriodMillisec >= 0) {
     rotationDirection = 1;
-    angularSpeedMillisec = angularVelocityMillisec;
+    unsignedAngularSpeedMillisec = angularPeriodMillisec;
   } else {
     rotationDirection = -1;
-    angularSpeedMillisec = -angularVelocityMillisec;
+    unsignedAngularSpeedMillisec = -angularPeriodMillisec;
   }
 
   /*
@@ -57,7 +57,8 @@ const FourierRing: React.FC<{
   const OrbitingCursor = styled.div`
     height: ${cursorRadiusPx * 2}px;
     width: ${cursorRadiusPx * 2}px;
-    animation: ${orbitAnimation} ${angularSpeedMillisec}ms linear infinite;
+    animation: ${orbitAnimation} ${unsignedAngularSpeedMillisec}ms linear
+      infinite;
   `;
 
   const Ring = styled.div`

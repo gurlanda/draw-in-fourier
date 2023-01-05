@@ -18,7 +18,7 @@ const FourierRingStack: React.FC<{ ringParams: RingParams[] }> = ({
 
     return (
       <FourierRing
-        angularVelocityMillisec={ringParams[0].angularVelocityMillisec}
+        angularPeriodMillisec={ringParams[0].angularPeriodMillisec}
         radiusPx={ringParams[0].radiusPx}
         initialAngleDeg={ringParams[0].initialAngleDeg}
       >
