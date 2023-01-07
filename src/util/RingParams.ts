@@ -11,7 +11,7 @@ class RingParams {
 
   /**
    * Construct a new RingParams object.
-   * @param angularPeriodMillisec The velocity of rotation in milliseconds. Positive values specify counterclockwise rotation and negative values specify clockwise rotation.
+   * @param angularPeriodMillisec The period of rotation in milliseconds. Positive values specify counterclockwise rotation and negative values specify clockwise rotation.
    * @param radiusPx The radius of the circle in pixels. This must be non-negative or an exception will be thrown upon construction.
    * @param initialAngleDeg The starting angle in degrees, measured from the horizontal axis (x-axis)
    * @throws {InvalidArgumentError} When the given radiusPx is negative.
@@ -56,6 +56,51 @@ class RingParams {
       this.initialAngleDeg
     );
   }
+}
+
+/**
+ * Given the discrete Fourier transform of a user-drawn image, this function gives the RingParams needed to reconstruct the image.
+ * @param signal The signal to extract the FourierRing parameters from.
+ * @returns The RingParams needed to reconstruct the original image.
+ */
+export function signalToRingParams(signal: Complex[]): RingParams[] {
+  // Period of the slowest ring. The periods of all other rings are proportional to this base period.
+  const basePeriodMillisec = 15_000; // 15 seconds
+  const ringParams: RingParams[] = [];
+
+  // Alternate between pushing positive and negative frequencies.
+  // Start with pushing the value with the largest period.
+  // Skip the DC frequency component by starting the indexing at 1.
+  const numberOfPositiveFrequencies = signal.length / 2;
+  for (let i = 1; i < numberOfPositiveFrequencies; i++) {
+    const period = Math.floor(basePeriodMillisec / i);
+
+    // Push the positive frequency
+    ringParams.push(
+      new RingParams(
+        period,
+        signal[i].mag(),
+        signal[i].arg() * (180 / Math.PI) // Convert radians to degrees
+      )
+    );
+
+    // Prevent from pushing the shortest frequency twice.
+    // (In this case, the positive frequency is equal to the negative frequency.)
+    if (i === signal.length - i) {
+      continue;
+    }
+
+    // Push the negative frequency
+    ringParams.push(
+      new RingParams(
+        -period,
+        signal[signal.length - i].mag(),
+        signal[i].arg() * (180 / Math.PI) // Convert radians to degrees
+      )
+    );
+  }
+
+  return ringParams;
 }
 
 export default RingParams;

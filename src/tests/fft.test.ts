@@ -431,8 +431,8 @@ describe('Tests for complex-valued FFT implementation.', () => {
       .map(() => new Complex(0, 0)); // Create new, distinct objects in their place
     unitImpulse[0] = new Complex(1, 0);
 
-    // Create a unit impulse shifted by 20
-    const shift = 19;
+    // Create a unit impulse shifted by 25
+    const shift = 25;
     const shiftedUnitImpulse = Array<Complex>(128)
       .fill(zero)
       .map(() => new Complex(0, 0));
