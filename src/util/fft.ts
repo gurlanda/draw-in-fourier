@@ -1,4 +1,8 @@
-import Complex, { cloneComplex, cloneSignal } from './Complex';
+import Complex, {
+  cloneComplex,
+  cloneSignal,
+  principleRootOfUnity,
+} from './Complex';
 import InvalidArgumentError from './InvalidArgumentError';
 
 /*
@@ -91,30 +95,6 @@ function isPositivePowerOfTwo(num: number): boolean {
   } else {
     return isPositivePowerOfTwo(num / 2);
   }
-}
-
-/**
- * Calculates the principle Nth root of unity for a given positive integer n.
- * @param n The degree of the root of unity to calculate.
- * @returns The principle Nth root of unity.
- * @throws {InvalidArgumentError} If the given argument is not a positive integer.
- */
-function principleRootOfUnity(n: number): Complex {
-  if (n <= 0) {
-    throw new InvalidArgumentError('Given argument is not a positive integer');
-  }
-
-  if (n - Math.floor(n) !== 0) {
-    throw new InvalidArgumentError('Given argument is not a positive integer');
-  }
-
-  const i = new Complex(0, 1);
-  const pi = new Complex(Math.PI, 0);
-
-  // Perform the following complex exponential:
-  // e^( (2 * PI * i) / n )
-  const arg = pi.mult(i.mult(new Complex(2.0 / n, 0)));
-  return arg.exp();
 }
 
 /**
