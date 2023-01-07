@@ -11,7 +11,32 @@ import fft, { pureFFT } from '../util/fft';
  */
 function relativeError(num1: number, num2: number): number {
   const difference = num1 - num2;
-  const relativeError = Math.abs(difference / Math.max(num1, num2));
+  if (difference === 0) {
+    return 0;
+  }
+
+  // The larger input is used as the divisor. This is done so that the result doesn't depend on the order of the inputs.
+  // We don't want to divide by 0, however, so this function chooses the min if the max is zero.
+  function safeMaxDivisor() {
+    let max = Math.max(num1, num2);
+    let min = Math.min(num1, num2);
+    if (max !== 0) {
+      return max;
+    }
+
+    if (min !== 0) {
+      return min;
+    }
+
+    // Code shouldn't reach here. Execution reaches this point if and only if max and min (and therefore num1 and num2) are both zero.
+    // But if both arguments are zero, then their difference is zero and relativeError() should have returned zero before reaching this point.
+    else
+      throw Error(
+        'In relativeError() > safeMaxDivisor(): Code is running a theoretically unreachable point.'
+      );
+  }
+
+  const relativeError = Math.abs(difference / safeMaxDivisor());
   return relativeError;
 }
 
@@ -22,14 +47,38 @@ function relativeError(num1: number, num2: number): number {
  * @returns True if and only if the relative error between the two numbers are within an acceptable bound.
  */
 function numsAreCloseEnough(num1: Complex, num2: Complex): boolean {
-  const acceptableError = 1e-13;
-  if (
-    relativeError(num1.real, num2.real) <= acceptableError &&
-    relativeError(num1.img, num2.img) <= acceptableError
-  ) {
+  const acceptableError = 1e-8;
+
+  // I consider a number to be practically zero if its magnitude falls below the error threshold.
+  function isPracticallyZero(num: number): boolean {
+    if (Math.abs(num) <= acceptableError) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  // Two numbers are close enough if the relative error between them is acceptable or if they are both practically zero.
+  function closeEnough(num1: number, num2: number): boolean {
+    if (relativeError(num1, num2) <= acceptableError) {
+      return true;
+    }
+
+    if (isPracticallyZero(num1) && isPracticallyZero(num2)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  if (closeEnough(num1.real, num2.real) && closeEnough(num1.img, num2.img)) {
     return true;
   }
 
+  // console.dir({
+  //   num1,
+  //   num2,
+  // });
   return false;
 }
 
@@ -374,46 +423,46 @@ describe('Tests for complex-valued FFT implementation.', () => {
     expect(passBadInput).toThrowError();
   });
 
-  // it('Should transform a time-shifted time domain signal to a linearly phase-rotated signal in the frequency domain', () => {
-  //   // Create the unit impulse
-  //   const zero = new Complex(0, 0);
-  //   const unitImpulse = Array<Complex>(128)
-  //     .fill(zero) // The filled values reference the same object
-  //     .map(() => new Complex(0, 0)); // Create new, distinct objects in their place
-  //   unitImpulse[0] = new Complex(1, 0);
+  it('Should transform a time-shifted time domain signal to a linearly phase-rotated signal in the frequency domain', () => {
+    // Create the unit impulse
+    const zero = new Complex(0, 0);
+    const unitImpulse = Array<Complex>(128)
+      .fill(zero) // The filled values reference the same object for now
+      .map(() => new Complex(0, 0)); // Create new, distinct objects in their place
+    unitImpulse[0] = new Complex(1, 0);
 
-  //   // Create a unit impulse shifted by 20
-  //   const shift = 19;
-  //   const shiftedUnitImpulse = Array<Complex>(128)
-  //     .fill(zero)
-  //     .map(() => new Complex(0, 0));
-  //   shiftedUnitImpulse[shift] = new Complex(1, 0);
+    // Create a unit impulse shifted by 20
+    const shift = 19;
+    const shiftedUnitImpulse = Array<Complex>(128)
+      .fill(zero)
+      .map(() => new Complex(0, 0));
+    shiftedUnitImpulse[shift] = new Complex(1, 0);
 
-  //   // Utility function
-  //   // Calculates a rotation scalar
-  //   function phaseRotation(frequency: number) {
-  //     // Calculate the product -i * 2 * PI * frequency * shift
-  //     const i = new Complex(0, 1);
-  //     const omega = (2 * Math.PI * frequency) / 128;
-  //     const product = i.mult(new Complex(omega * shift, 0));
+    // Utility function
+    // Calculates a rotation scalar
+    function phaseRotation(frequency: number) {
+      // Calculate the product -i * 2 * PI * frequency * shift
+      const i = new Complex(0, 1);
+      const omega = (2 * Math.PI * frequency) / 128;
+      const product = i.mult(new Complex(omega * shift, 0));
 
-  //     return product.exp();
-  //   }
+      return product.exp();
+    }
 
-  //   // Create the linear phase rotation signal
-  //   const phaseRotatorSignal = Array<Complex>(128).fill(zero);
-  //   for (let i = 0; i < phaseRotatorSignal.length; i++) {
-  //     phaseRotatorSignal[i] = phaseRotation(i);
-  //   }
+    // Create the linear phase rotation signal
+    const phaseRotatorSignal = Array<Complex>(128).fill(zero);
+    for (let i = 0; i < phaseRotatorSignal.length; i++) {
+      phaseRotatorSignal[i] = phaseRotation(i);
+    }
 
-  //   const fftThenRotate = pointwiseProduct(
-  //     fft(unitImpulse),
-  //     phaseRotatorSignal
-  //   );
+    const fftThenRotate = pointwiseProduct(
+      fft(unitImpulse),
+      phaseRotatorSignal
+    );
 
-  //   const shiftThenFFT = fft(shiftedUnitImpulse);
-  //   // console.log(shiftThenFFT);
+    const shiftThenFFT = fft(shiftedUnitImpulse);
 
-  //   expect(fftThenRotate).toStrictEqual(shiftThenFFT);
-  // });
+    // expect(fftThenRotate).toStrictEqual(shiftThenFFT);
+    expect(signalsAreCloseEnough(fftThenRotate, shiftThenFFT)).toBe(true);
+  });
 });

@@ -21,7 +21,7 @@ export function pureFFT(signal: Complex[]): Complex[] {
 
   if (!isPositivePowerOfTwo(signal.length)) {
     throw new InvalidArgumentError(
-      'In fft(): Given signal has length that is not a (positive integer) power of two'
+      'In fft(): Given signal has length that is not a power of two'
     );
   }
 
@@ -42,18 +42,26 @@ export function pureFFT(signal: Complex[]): Complex[] {
   const oddSignalFFT = pureFFT(oddSignal);
 
   const output: Complex[] = [];
-  for (let i = 0; i < signal.length / 2; i++) {
+  let currentRootOfUnity = new Complex(1, 0);
+
+  // Calculate the values for positive frequencies
+  for (let i = 0; i < evenSignalFFT.length; i++) {
     // Perform the following calculation, then push the result:
-    // evenSignalFFT(i) + (principleRoot * oddSignalFFT(i))
-    const product = principleRoot.mult(oddSignalFFT[i]);
+    // evenSignalFFT[i] + (currentRootOfUnity * oddSignalFFT[i])
+    const product = currentRootOfUnity.mult(oddSignalFFT[i]);
     output.push(evenSignalFFT[i].add(product));
+
+    currentRootOfUnity = currentRootOfUnity.mult(principleRoot);
   }
 
-  for (let i = 0; i < signal.length / 2; i++) {
+  // Calculate the values for negative frequencies
+  for (let i = 0; i < evenSignalFFT.length; i++) {
     // Perform the following calculation, then push the result:
-    // evenSignalFFT(i) - (principleRoot * oddSignalFFT(i))
-    const product = principleRoot.mult(oddSignalFFT[i]);
-    output.push(evenSignalFFT[i].sub(product));
+    // evenSignalFFT[i] + (currentRootOfUnity * oddSignalFFT[i])
+    const product = currentRootOfUnity.mult(oddSignalFFT[i]);
+    output.push(evenSignalFFT[i].add(product));
+
+    currentRootOfUnity = currentRootOfUnity.mult(principleRoot);
   }
 
   return output;
