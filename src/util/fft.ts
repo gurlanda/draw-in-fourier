@@ -1,9 +1,6 @@
-import Complex, {
-  cloneComplex,
-  cloneSignal,
-  principleRootOfUnity,
-} from './Complex';
+import Complex, { cloneComplex, principleRootOfUnity } from './Complex';
 import InvalidArgumentError from './InvalidArgumentError';
+import { cloneSignal } from './SignalUtil';
 
 /*
   DONE: Implement zero-padding function

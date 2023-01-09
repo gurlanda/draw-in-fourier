@@ -1,14 +1,6 @@
 import Complex from './Complex';
 import InvalidArgumentError from './InvalidArgumentError';
-
-const acceptableError = 1e-8;
-function isPracticallyZero(num: number): boolean {
-  if (Math.abs(num) <= acceptableError) {
-    return true;
-  } else {
-    return false;
-  }
-}
+import { isPracticallyZero } from './SignalUtil';
 
 /**
  * Represents the set of initial values that defines the motion of a FourierRing.

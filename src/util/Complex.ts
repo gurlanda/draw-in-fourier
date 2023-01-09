@@ -15,15 +15,6 @@ export function cloneComplex(num: Complex): Complex {
 }
 
 /**
- * Create a deep clone of the given signal.
- * @param signal The signal to clone.
- * @returns A deep clone of the given signal.
- */
-export function cloneSignal(signal: Complex[]): Complex[] {
-  return signal.map((elem) => cloneComplex(elem));
-}
-
-/**
  * Calculates the principle Nth root of unity for a given positive integer n.
  * @param n The degree of the root of unity to calculate.
  * @returns The principle Nth root of unity.
