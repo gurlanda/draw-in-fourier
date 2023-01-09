@@ -97,6 +97,16 @@ function isPositivePowerOfTwo(num: number): boolean {
   }
 }
 
+function getNextPowerOfTwo(num: number): number {
+  // Calculate the smallest power of two that's greater than the length of the signal
+  let nextPowerOfTwo = 1;
+  while (nextPowerOfTwo <= num) {
+    nextPowerOfTwo *= 2;
+  }
+
+  return nextPowerOfTwo;
+}
+
 /**
  * If the given signal isn't a power of two, then this function returns an expanded clone of the signal that is a power of two where the clone is padded with zeros. If the given signal is a power of two, this function just returns a clone of the original signal.
  * @param signal A signal to expand in the form of a Complex array.
@@ -108,10 +118,7 @@ function zeroPadSignal(signal: Complex[]): Complex[] {
   }
 
   // Calculate the smallest power of two that's greater than the length of the signal
-  let nextPowerOfTwo = 1;
-  while (nextPowerOfTwo < signal.length) {
-    nextPowerOfTwo *= 2;
-  }
+  const nextPowerOfTwo = getNextPowerOfTwo(signal.length);
 
   // Pad the output with zeros
   for (let i = signal.length; i < nextPowerOfTwo; i++) {
@@ -119,4 +126,38 @@ function zeroPadSignal(signal: Complex[]): Complex[] {
   }
 
   return output;
+}
+
+export function interpolateSignal(signal: Complex[]): Complex[] {
+  // Figure out the number of new points to add
+  let numNewPoints = getNextPowerOfTwo(signal.length) - signal.length;
+
+  const interpolatedSignal: Complex[] = [];
+  let i = 0;
+  while (i < numNewPoints) {
+    const first = signal[i];
+
+    let second: Complex;
+    if (i === signal.length - 1) {
+      second = signal[0];
+    } else {
+      second = signal[i + 1];
+    }
+
+    // Interpolate by averaging
+    // interpolated = (first + second) / 2
+    const sum = first.add(second);
+    const interpolated = sum.scalarMult(1.0 / 2);
+
+    interpolatedSignal.push(first);
+    interpolatedSignal.push(interpolated);
+    i++;
+  }
+
+  // Add the rest of the points
+  while (i < signal.length) {
+    interpolatedSignal.push(signal[i]);
+  }
+
+  return interpolatedSignal;
 }

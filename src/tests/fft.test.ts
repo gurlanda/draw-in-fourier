@@ -1,7 +1,8 @@
 import { describe } from '@jest/globals';
 import * as testCases from './fftTestCases';
-import Complex, { cloneSignal } from '../util/Complex';
-import fft, { pureFFT } from '../util/fft';
+import Complex, { cloneSignal, principleRootOfUnity } from '../util/Complex';
+import fft, { interpolateSignal, pureFFT } from '../util/fft';
+import { signalToRingParams } from '../util/RingParams';
 
 /**
  * Calculates the relative error between two numbers, where the larger input is used as the divisor. This is done so that the result doesn't depend on the order of the inputs.
@@ -40,6 +41,17 @@ function relativeError(num1: number, num2: number): number {
   return relativeError;
 }
 
+const acceptableError = 1e-8;
+
+// I consider a number to be practically zero if its magnitude falls below the error threshold.
+export function isPracticallyZero(num: number): boolean {
+  if (Math.abs(num) <= acceptableError) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 /**
  * Determines whether or not two complex numbers are within an acceptable bound.
  * @param num1 The first argument.
@@ -47,17 +59,6 @@ function relativeError(num1: number, num2: number): number {
  * @returns True if and only if the relative error between the two numbers are within an acceptable bound.
  */
 function numsAreCloseEnough(num1: Complex, num2: Complex): boolean {
-  const acceptableError = 1e-8;
-
-  // I consider a number to be practically zero if its magnitude falls below the error threshold.
-  function isPracticallyZero(num: number): boolean {
-    if (Math.abs(num) <= acceptableError) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
   // Two numbers are close enough if the relative error between them is acceptable or if they are both practically zero.
   function closeEnough(num1: number, num2: number): boolean {
     if (relativeError(num1, num2) <= acceptableError) {
@@ -464,5 +465,34 @@ describe('Tests for complex-valued FFT implementation.', () => {
 
     // expect(fftThenRotate).toStrictEqual(shiftThenFFT);
     expect(signalsAreCloseEnough(fftThenRotate, shiftThenFFT)).toBe(true);
+
+    // // Generate a square
+    // const cornerPoints: Complex[] = [
+    //   new Complex(1, 0),
+    //   new Complex(0, 1),
+    //   new Complex(-1, 0),
+    //   new Complex(0, -1),
+    // ];
+
+    // // Interpolate 5 times
+    // let squareShapeSignal: Complex[] = cornerPoints;
+    // for (let i = 0; i < 5; i++) {
+    //   squareShapeSignal = interpolateSignal(squareShapeSignal);
+    // }
+
+    // console.log(signalToRingParams(fft(squareShapeSignal)));
+
+    // // Print to console
+    // let log = '[\n';
+    // for (let i = 0; i < squareShapeSignal.length - 1; i++) {
+    //   const currentElement = squareShapeSignal[i];
+    //   log += `new Complex(${currentElement.real}, ${currentElement.img}),\n`;
+    // }
+    // // The last element is a special case
+    // log += `new Complex(${
+    //   squareShapeSignal[squareShapeSignal.length - 1].real
+    // }, ${squareShapeSignal[squareShapeSignal.length - 1].img})\n]`;
+
+    // console.log(log);
   });
 });

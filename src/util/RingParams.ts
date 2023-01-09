@@ -1,6 +1,15 @@
 import Complex from './Complex';
 import InvalidArgumentError from './InvalidArgumentError';
 
+const acceptableError = 1e-8;
+function isPracticallyZero(num: number): boolean {
+  if (Math.abs(num) <= acceptableError) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 /**
  * Represents the set of initial values that defines the motion of a FourierRing.
  */
@@ -21,16 +30,27 @@ class RingParams {
     radiusPx: number,
     initialAngleDeg: number
   ) {
-    this._angularPeriodMillisec = angularPeriodMillisec;
-    this._initialAngleDeg = initialAngleDeg;
+    if (Math.abs(angularPeriodMillisec) < 1) {
+      this._angularPeriodMillisec = 0;
+    } else {
+      this._angularPeriodMillisec = angularPeriodMillisec;
+    }
+
+    if (isPracticallyZero(initialAngleDeg)) {
+      this._initialAngleDeg = 0;
+    } else {
+      this._initialAngleDeg = initialAngleDeg;
+    }
 
     if (radiusPx < 0) {
       throw new InvalidArgumentError(
         'In constructor RingParams(): Passed-in argument radiusPx must be a non-negative number'
       );
+    } else if (radiusPx < 1) {
+      this._radiusPx = 0;
+    } else {
+      this._radiusPx = radiusPx;
     }
-
-    this._radiusPx = radiusPx;
   }
 
   get angularPeriodMillisec(): number {
@@ -65,7 +85,8 @@ class RingParams {
  */
 export function signalToRingParams(signal: Complex[]): RingParams[] {
   // Period of the slowest ring. The periods of all other rings are proportional to this base period.
-  const basePeriodMillisec = 15_000; // 15 seconds
+  const basePeriodMillisec = 10_000; // 10 seconds
+  const circleRadiusScalingFactor = 3; // 3x scale
   const ringParams: RingParams[] = [];
 
   // Alternate between pushing positive and negative frequencies.
@@ -79,7 +100,7 @@ export function signalToRingParams(signal: Complex[]): RingParams[] {
     ringParams.push(
       new RingParams(
         period,
-        signal[i].mag(),
+        signal[i].mag() * circleRadiusScalingFactor,
         signal[i].arg() * (180 / Math.PI) // Convert radians to degrees
       )
     );
@@ -94,7 +115,7 @@ export function signalToRingParams(signal: Complex[]): RingParams[] {
     ringParams.push(
       new RingParams(
         -period,
-        signal[signal.length - i].mag(),
+        signal[signal.length - i].mag() * circleRadiusScalingFactor,
         signal[i].arg() * (180 / Math.PI) // Convert radians to degrees
       )
     );

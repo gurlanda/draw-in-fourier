@@ -15,16 +15,18 @@ const FourierRing: React.FC<{
   radiusPx: number;
   initialAngleDeg: number;
 }> = ({ angularPeriodMillisec, radiusPx, initialAngleDeg, children }) => {
+  if (radiusPx < 1) {
+    return <>{children}</>;
+  }
+
   const ringWidthPx = 2;
   const cursorRadiusPx = 5;
   let rotationDirection: number;
-  let unsignedAngularSpeedMillisec: number;
+  let unsignedAngularSpeedMillisec: number = Math.abs(angularPeriodMillisec);
   if (angularPeriodMillisec >= 0) {
     rotationDirection = 1;
-    unsignedAngularSpeedMillisec = angularPeriodMillisec;
   } else {
     rotationDirection = -1;
-    unsignedAngularSpeedMillisec = -angularPeriodMillisec;
   }
 
   /*
