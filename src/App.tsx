@@ -7,21 +7,21 @@ import fft from './util/fft';
 import Complex from './util/Complex';
 
 function App() {
-  const ringParams: RingParams[] = [
-    new RingParams(5000, 200, 270),
-    new RingParams(-1300, 100, 90),
-  ];
-  const cornerPoints: Complex[] = [
-    new Complex(1, 0),
-    new Complex(0, 1),
-    new Complex(-1, 0),
-    new Complex(0, -1),
-  ];
-  const squareShapeFFT = fft(cornerPoints);
+  // const ringParams: RingParams[] = [
+  //   new RingParams(-5000, 200, 270),
+  //   new RingParams(1300, 100, 90),
+  // ];
+  // const cornerPoints: Complex[] = [
+  //   new Complex(1, 0),
+  //   new Complex(0, 1),
+  //   new Complex(-1, 0),
+  //   new Complex(0, -1),
+  // ];
+  const squareShapeFFT = fft(testCases.squareShapeSignalSize126);
   const squareRingParams: RingParams[] = signalToRingParams(squareShapeFFT);
   // console.log(squareRingParams);
   // const ringParams = [new RingParams(10, 100, 0)];
-  // const ringParams = squareRingParams;
+  const ringParams = squareRingParams;
 
   return (
     <div className="bg-gray-800 h-screen p-4 relative">

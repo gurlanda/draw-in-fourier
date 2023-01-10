@@ -6,11 +6,16 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
   children,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouseCursorPositions = useRef<Point[]>([new Point()]); // Save the user-drawn curve for later analysis
-  const canvasPosition = useRef<Point | null>(null);
-  const callbackId = useRef<number>(0); // Used to cancel the animation during cleanup
-  const lastOrbitingCursorPosition = useRef<Point>(new Point());
 
+  // Save the user-drawn curve for later analysis
+  const mouseCursorPositions = useRef<Point[]>([new Point()]);
+
+  const canvasPosition = useRef<Point | null>(null);
+
+  // Used to cancel the animation during cleanup
+  const callbackId = useRef<number>(0);
+
+  const lastOrbitingCursorPosition = useRef<Point>(new Point());
   const cursorContext = useContext(CursorContext);
 
   // Set the last cursor position using a mouse event, then return it
@@ -20,7 +25,7 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
     const newPoint = new Point(e.clientX, e.clientY);
     mouseCursorPositions.current.push(newPoint);
     return newPoint;
-  };
+  }; // setLastPosition()
 
   // Save the position of the canvas within the page
   const initializeCanvasPosition = () => {
@@ -31,10 +36,11 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
     // Used to get the position of the canvas on the page
     const boundingRect = canvasRef.current.getBoundingClientRect();
     canvasPosition.current = new Point(boundingRect.x, boundingRect.y);
-  };
+  }; // initialCanvasPosition()
 
   // Draw on the canvas on pointerDown
   const draw: React.MouseEventHandler<HTMLCanvasElement> = (e) => {
+    console.log('draw()');
     // Only allow the left mouse button
     if (e.buttons !== 1) {
       return;
@@ -48,6 +54,8 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
     if (!canvasPosition.current) {
       initializeCanvasPosition();
     }
+
+    console.log('Here!');
 
     // Begin drawing
     ctx.beginPath();
@@ -74,12 +82,12 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
 
     // Draw the stroke
     ctx.stroke();
-  };
+  }; // draw()
 
   // Set the position of the cursor
   const setPosition: React.MouseEventHandler<HTMLCanvasElement> = (e) => {
     setLastPosition(e);
-  };
+  }; // setPosition()
 
   useEffect(() => {
     if (!canvasRef.current) {
@@ -150,7 +158,7 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
       ctx.stroke();
 
       callbackId.current = requestAnimationFrame(traceCursorPath);
-    };
+    }; // traceCursorPath()
     callbackId.current = requestAnimationFrame(traceCursorPath);
 
     // Cleanup
@@ -160,8 +168,8 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
 
       // Cancel the animation
       cancelAnimationFrame(callbackId.current);
-    };
-  }, [cursorContext]);
+    }; // Cleanup
+  }, [cursorContext]); // useEffect()
 
   return (
     <canvas
