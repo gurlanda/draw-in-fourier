@@ -18,7 +18,11 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
   const lastOrbitingCursorPosition = useRef<Point>(new Point());
   const cursorContext = useContext(CursorContext);
 
-  // Set the last cursor position using a mouse event, then return it
+  /**
+   * Save the last cursor position into state by using a mouse event, then return it.
+   * @param e The mouse event to extract the cursor position from.
+   * @returns The current position of the cursor.
+   */
   const setLastPosition = (
     e: React.MouseEvent<HTMLCanvasElement, MouseEvent>
   ): Point => {
@@ -27,8 +31,10 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
     return newPoint;
   }; // setLastPosition()
 
-  // Save the position of the canvas within the page
-  const initializeCanvasPosition = () => {
+  /**
+   * Get the position of the canvas' top-right corner within the page and save it into state.
+   */
+  const initializeCanvasPosition = (): void => {
     if (!canvasRef.current) {
       return;
     }
@@ -38,9 +44,40 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
     canvasPosition.current = new Point(boundingRect.x, boundingRect.y);
   }; // initialCanvasPosition()
 
-  // Draw on the canvas on pointerDown
-  const draw: React.MouseEventHandler<HTMLCanvasElement> = (e) => {
-    console.log('draw()');
+  /**
+   * Draw a line segment on a canvas.
+   * @param ctx The canvas context used to draw the line segment.
+   * @param canvasPosition The position of the canvas within the page.
+   * @param fromPoint The starting coordinates of the line segment, where the origin is the viewport origin.
+   * @param toPoint The ending coordinates of the line segment, where the origin is the viewport origin.
+   */
+  function drawLineSegment(
+    ctx: CanvasRenderingContext2D,
+    canvasPosition: Point,
+    fromPoint: Point,
+    toPoint: Point
+  ): void {
+    // Set the drawing parameters
+    ctx.beginPath();
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#00e1e1'; // Cyan
+
+    // Set starting point of stroke
+    ctx.moveTo(fromPoint.x - canvasPosition.x, fromPoint.y - canvasPosition.y);
+
+    // Set the end point of the stroke
+    ctx.lineTo(toPoint.x - canvasPosition.x, toPoint.y - canvasPosition.y);
+
+    // Draw the stroke
+    ctx.stroke();
+  }
+
+  /**
+   * Draw on the canvas on pointerDown.
+   * @param e The MouseEvent used to draw.
+   */
+  const drawWithPointer: React.MouseEventHandler<HTMLCanvasElement> = (e) => {
     // Only allow the left mouse button
     if (e.buttons !== 1) {
       return;
@@ -55,39 +92,17 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
       initializeCanvasPosition();
     }
 
-    console.log('Here!');
-
-    // Begin drawing
-    ctx.beginPath();
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = '#00e1e1'; // Cyan
-
     // Set starting point of stroke
     const lastPoint =
-      mouseCursorPositions.current[mouseCursorPositions.current.length - 1];
-    ctx.moveTo(
-      lastPoint.x - canvasPosition.current!.x,
-      lastPoint.y - canvasPosition.current!.y
-    );
+      mouseCursorPositions.current[
+        mouseCursorPositions.current.length - 1
+      ].clone();
 
     // Save the current position
     const currentPoint = setLastPosition(e);
 
-    // Set the end point of the stroke
-    ctx.lineTo(
-      currentPoint.x - canvasPosition.current!.x,
-      currentPoint.y - canvasPosition.current!.y
-    );
-
-    // Draw the stroke
-    ctx.stroke();
+    drawLineSegment(ctx, canvasPosition.current!, lastPoint, currentPoint);
   }; // draw()
-
-  // Set the position of the cursor
-  const setPosition: React.MouseEventHandler<HTMLCanvasElement> = (e) => {
-    setLastPosition(e);
-  }; // setPosition()
 
   useEffect(() => {
     if (!canvasRef.current) {
@@ -115,7 +130,9 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
     });
     observer.observe(canvasRef.current);
 
-    // Trace the cursor's path
+    /**
+     * On the canvas, draw the path of the cursor nested in the FourierRingStack (not the mouse pointer).
+     */
     const traceCursorPath = () => {
       const ctx = canvasRef.current?.getContext('2d');
       if (!ctx || !cursorContext) {
@@ -129,33 +146,12 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
         initializeCanvasPosition();
       }
 
-      // Begin drawing
-      ctx.beginPath();
-      ctx.lineWidth = 2;
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = '#00e1e1'; // Cyan
-
-      // Set starting point of stroke to the last cursor position
-      ctx.moveTo(
-        lastOrbitingCursorPosition.current.x - canvasPosition.current!.x,
-        lastOrbitingCursorPosition.current.y - canvasPosition.current!.y
-      );
-
-      // console.dir({
-      //   'Old position:': lastCursorPosition.current,
-      // });
+      // Set the endpoints of the line segment to draw
+      const fromPoint = lastOrbitingCursorPosition.current.clone();
       lastOrbitingCursorPosition.current =
         cursorContext.getCursorPosition() ?? new Point();
-      // console.dir({ 'New position:': lastCursorPosition.current });
-
-      // Set the end point of the stroke to the current cursor position
-      ctx.lineTo(
-        lastOrbitingCursorPosition.current.x - canvasPosition.current!.x,
-        lastOrbitingCursorPosition.current.y - canvasPosition.current!.y
-      );
-
-      // Draw the stroke
-      ctx.stroke();
+      const toPoint = lastOrbitingCursorPosition.current.clone();
+      drawLineSegment(ctx, canvasPosition.current!, fromPoint, toPoint);
 
       callbackId.current = requestAnimationFrame(traceCursorPath);
     }; // traceCursorPath()
@@ -174,8 +170,10 @@ const DrawingCanvas: React.FC<{ children?: React.ReactNode }> = ({
   return (
     <canvas
       ref={canvasRef}
-      onPointerDown={setPosition}
-      onPointerMove={draw}
+      onPointerDown={(e) => {
+        setLastPosition(e);
+      }}
+      onPointerMove={drawWithPointer}
       className="absolute block"
     >
       {children}

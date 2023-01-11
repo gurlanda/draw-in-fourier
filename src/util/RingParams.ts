@@ -22,27 +22,31 @@ class RingParams {
     radiusPx: number,
     initialAngleDeg: number
   ) {
-    if (Math.abs(angularPeriodMillisec) < 1) {
-      this._angularPeriodMillisec = 0;
-    } else {
-      this._angularPeriodMillisec = angularPeriodMillisec;
-    }
+    // if (Math.abs(angularPeriodMillisec) < 1) {
+    //   this._angularPeriodMillisec = 0;
+    // } else {
+    //   this._angularPeriodMillisec = angularPeriodMillisec;
+    // }
+    this._angularPeriodMillisec = angularPeriodMillisec;
 
-    if (isPracticallyZero(initialAngleDeg)) {
-      this._initialAngleDeg = 0;
-    } else {
-      this._initialAngleDeg = initialAngleDeg;
-    }
+    // if (isPracticallyZero(initialAngleDeg)) {
+    //   this._initialAngleDeg = 0;
+    // } else {
+    //   this._initialAngleDeg = initialAngleDeg;
+    // }
+    this._initialAngleDeg = initialAngleDeg;
 
     if (radiusPx < 0) {
       throw new InvalidArgumentError(
         'In constructor RingParams(): Passed-in argument radiusPx must be a non-negative number'
       );
-    } else if (radiusPx < 1) {
-      this._radiusPx = 0;
-    } else {
-      this._radiusPx = radiusPx;
     }
+    // else if (radiusPx < 1) {
+    //   this._radiusPx = 0;
+    // } else {
+    //   this._radiusPx = radiusPx;
+    // }
+    this._radiusPx = radiusPx;
   }
 
   get angularPeriodMillisec(): number {
@@ -78,7 +82,7 @@ class RingParams {
 export function signalToRingParams(signal: Complex[]): RingParams[] {
   // Period of the slowest ring. The periods of all other rings are proportional to this base period.
   const basePeriodMillisec = 10_000; // 10 seconds
-  const circleRadiusScalingFactor = 3; // 3x scale
+  const circleRadiusScalingFactor = 2; // 3x scale
   const ringParams: RingParams[] = [];
 
   // Alternate between pushing positive and negative frequencies.
